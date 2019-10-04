@@ -1,0 +1,21 @@
+{
+    "name": "Give Back Pact",
+    "version": "0.0.1",
+    "description": "Shop responsibly!",
+    "permissions": ["storage","https://*/*", "http://*/*"],
+    "background": {
+        "scripts": ["background.js"],
+        "persistent": false
+    },
+    "content_scripts": [
+        {
+        "run_at": "document_end",
+        "matches": ["*://*.amazon.com/*"],
+        "js": ["content.js"]
+        }
+      ],
+    "browser_action": {
+        "default_popup": "popup.html"
+    },
+    "manifest_version": 2
+}
