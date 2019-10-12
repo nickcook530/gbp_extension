@@ -15,7 +15,19 @@
         }
       ],
     "browser_action": {
-        "default_popup": "popup.html"
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "images/icons/gbp16.png",
+            "32": "images/icons/gbp32.png",
+            "48": "images/icons/gbp48.png",
+            "128": "images/icons/gbp128.png"
+          }
     },
+    "icons": {
+        "16": "images/icons/gbp16.png",
+        "32": "images/icons/gbp32.png",
+        "48": "images/icons/gbp48.png",
+        "128": "images/icons/gbp128.png"
+      },
     "manifest_version": 2
 }
