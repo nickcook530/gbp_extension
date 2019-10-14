@@ -23,7 +23,7 @@ chrome.runtime.onStartup.addListener(function(){
             console.log(result_array);
 
             chrome.storage.local.set({category_api_result: result_array}, function() {
-                console.log("Category storage by background.js complete");
+                console.log("SUCCESS. Category storage by background.js complete");
             });
         }
         else {
@@ -31,21 +31,11 @@ chrome.runtime.onStartup.addListener(function(){
         }
     };
     xhr_categories.send();
-
-    chrome.storage.local.get(function(result){
-        if (typeof result.word_synonyms === 'undefined') {
-            console.log("NO stored results");
-            //Add code here to pull down word synonyms from API
-        }else{
-            console.log("There are stored results");
-            console.log(result);
-        }
-    });
 });
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        var api_category; // initiate to set later for use in api call
+        var api_category = null; // initiate to set later for use in api call
         if (request.msg === "content_completed") {
             //  Get search term from message data
             let search_term_array = request.data.search_term_array;
@@ -72,7 +62,7 @@ function getCategoryArray(api_category, search_term_array, callback) {
 
 function findCompany(api_category, search_term_array, categories) {
     search_term_array.forEach(function(search_word) {
-        if (api_category === undefined) {//Use to break loop at first instance of a match. Might need a better solution long term
+        if (api_category === null) {//Use to break loop at first instance of a match. Might need a better solution long term
             console.log("api_category is undefined");
             for (let category of categories) {
                 console.log("in for loop of categories, on: "+category);
@@ -87,29 +77,36 @@ function findCompany(api_category, search_term_array, categories) {
         }
     });
 
-    let xhr_companies = new XMLHttpRequest();
-    xhr_companies.responseType = 'json';
-    xhr_companies.open('GET', "http://givebackpact.herokuapp.com/api/categories/" + api_category + "/companies");
-    xhr_companies.onload = function() {
-        if (xhr_companies.status === 200) {
-            let result_array = xhr_companies.response;
-            console.log("companies retrieved by background.js: ")
-            console.log(result_array);
+    if (api_category !== null && api_category !== undefined) {
+        let xhr_companies = new XMLHttpRequest();
+        xhr_companies.responseType = 'json';
+        xhr_companies.open('GET', "http://givebackpact.herokuapp.com/api/categories/" + api_category + "/companies");
+        xhr_companies.onload = function() {
+            if (xhr_companies.status === 200) {
+                let result_array = xhr_companies.response;
+                console.log("companies retrieved by background.js: ")
+                console.log(result_array);
 
-            chrome.storage.local.set({company_api_result: result_array}, function() {
-                console.log("Company storage by background.js complete");
-            });
-            if (result_array.length > 0) {
-                chrome.browserAction.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
-                chrome.browserAction.setBadgeText({text: result_array.length.toString()});
-            }else {
+                chrome.storage.local.set({company_api_result: result_array}, function() {
+                    console.log("Company storage by background.js complete");
+                });
+                if (result_array.length > 0) {
+                    chrome.browserAction.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
+                    chrome.browserAction.setBadgeText({text: result_array.length.toString()});
+                }else {
+                    chrome.browserAction.setBadgeText({text: ''}); //might be unnecessary now that we have if loop to check if api_category is undefinded
+                };
+            }
+            else {
+                //alert('Request failed.  Returned status of ' + xhr_companies.status);
                 chrome.browserAction.setBadgeText({text: ''});
-            };
-        }
-        else {
-            //alert('Request failed.  Returned status of ' + xhr_companies.status);
-            chrome.browserAction.setBadgeText({text: ''});
-        }
-    };
-    xhr_companies.send();
+            }
+        };
+        xhr_companies.send();
+    }else{
+        chrome.browserAction.setBadgeText({text: ''});
+        chrome.storage.local.set({company_api_result: null}, function() {
+            console.log("No applicable category found for search term(s)");
+        });
+    }
 }
